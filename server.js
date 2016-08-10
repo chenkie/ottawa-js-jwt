@@ -1,29 +1,33 @@
 'use strict';
 
 const express = require('express');
-const jwt = require('express-jwt');
+const authentication = require('express-jwt');
 const authorization = require('express-jwt-authz');
 const app = express();
 const cors = require('cors');
 
 app.use(cors());
 
-const authCheck = jwt({
+// authenticationCheck
+const authenticationCheck = authentication({
   secret: 'secret'
 });
 
+// authorizationCheck
+const authorizationCheck = authorization(['read:contacts']);
+
 // public, wide-open endpoint
-app.get('/api/public-route', (req, res) => {
+app.get('/api/public-route', authenticationCheck, (req, res) => {
   res.send('This is a public endpoint. You don\'t need a token to get here.');
 });
 
 // private endpoint - just need a valid token to access
-app.get('/api/private-route', authCheck, (req, res) => {
+app.get('/api/private-route', authenticationCheck, authenticationCheck, (req, res) => {
   res.send('This is a private endpoint. You need a token to get here.');
 });
 
 // private endpoint with tight scope - need a "read:contacts" scope
-app.get('/api/contacts', authCheck, authorization(['read:contacts']), (req, res) => {
+app.get('/api/contacts', (req, res) => {
   res.send('This is a private endpoint. You need a read:contacts scope to get here.');
 });
 
